@@ -1,13 +1,12 @@
 package ru.hse.spb
 
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class TestSource {
     @Test
     fun testImpossible() {
-        assertEquals("IMPOSSIBLE", formattedName(3, "a?c"))
+        assertEquals(null, formattedName(3, "a?c"))
     }
 
     @Test
