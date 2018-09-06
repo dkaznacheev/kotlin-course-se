@@ -2,7 +2,7 @@ package ru.hse.spb
 
 import java.util.*
 
-private fun isQuestion(c:Char) = c == '?'
+private fun isQuestion(c: Char) = c == '?'
 
 fun formattedName(lettersNumber: Int, template: String): String? {
     val name = template.toCharArray()
@@ -14,8 +14,8 @@ fun formattedName(lettersNumber: Int, template: String): String? {
         val r = n - l - 1
         if (name[l] != name[r]) {
             when {
-                name[l] == '?' -> name[l] = name[r]
-                name[r] == '?' -> name[r] = name[l]
+                isQuestion(name[l]) -> name[l] = name[r]
+                isQuestion(name[r]) -> name[r] = name[l]
                 else -> return null
             }
         } else if (isQuestion(name[l]))
@@ -49,5 +49,5 @@ fun main(args: Array<String>) {
     val lettersNumber = scanner.nextInt()
     val template = scanner.next()
 
-    println(formattedName(lettersNumber, template)?:"IMPOSSIBLE")
+    println(formattedName(lettersNumber, template) ?: "IMPOSSIBLE")
 }
