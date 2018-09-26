@@ -17,9 +17,10 @@ fun main(args: Array<String>) {
     val lexer = ExpLexer(CharStreams.fromString(
             "fun fib(x) {" +
                     "if (x == 0) {return 1}" +
-                    "return fib(x - 1)" +
+                    "if (x == 1) {return 1}" +
+                    "return fib(x - 1) + fib(x - 2)" +
                     "}" +
-                    "print(fib(0))"
+                    "print(fib(5))"
     ))
     val parser = ExpParser(BufferedTokenStream(lexer))
     val visitor = ExpFunVisitor()

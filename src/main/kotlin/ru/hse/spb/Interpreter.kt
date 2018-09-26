@@ -133,18 +133,23 @@ class ExpFunVisitor: ExpBaseVisitor<Int?>() {
     }
 
     override fun visitT_return(ctx: ExpParser.T_returnContext): Int? {
-        env.result = visit(ctx.value)
+        val res = visit(ctx.value)
+        println("ret " + res)
+        env.result = res //visit(ctx.value)
         return null
     }
 
     override fun visitT_if(ctx: ExpParser.T_ifContext): Int? {
+        //env.printVariables()
         val cond = visit(ctx.condition)
         val block: ExpParser.BlockContext? =
                 if (cond != 0) ctx.block(0) else ctx.block(1)
         if (block != null) {
             env = Environment(env)
             visitBlock(block)
+            val blockResult = env.result
             env = env.parent!!
+            env.result = blockResult
         }
         return null
     }
@@ -153,7 +158,11 @@ class ExpFunVisitor: ExpBaseVisitor<Int?>() {
         while (visit(ctx.condition) != 0) {
             env = Environment(env)
             visitBlock(ctx.block())
+            val blockResult = env.result
             env = env.parent!!
+            env.result = blockResult
+            if (blockResult != null)
+                return null
         }
         return null
     }
