@@ -11,7 +11,7 @@ class ExpFunVisitor: ExpBaseVisitor<Int?>() {
     var env: Environment = Environment(null)
 
     override fun visitFile(ctx: ExpParser.FileContext): Int? {
-        env.addFunction("print", listOf("value"), null)
+        env.addFunction("println", listOf(), null)
         return visit(ctx.block())
     }
 
@@ -21,8 +21,6 @@ class ExpFunVisitor: ExpBaseVisitor<Int?>() {
             if (env.result != null)
                 break
         }
-        //env.printVariables()
-        //env.printFunctions()
         return env.result
     }
 
@@ -104,18 +102,15 @@ class ExpFunVisitor: ExpBaseVisitor<Int?>() {
 
     override fun visitFunction_call(ctx: ExpParser.Function_callContext): Int? {
         val name = ctx.name.text
-        val argc = ctx.args.expression().size
-        val foundFunction = env.getFunction(name, argc)
 
-        if (foundFunction.second == null) {
-            if (name == "print" && argc == 1) {
-                println(visit(ctx.args.expression().first()))
-                return null
-            } else {
-                throw NoFunctionException()
-            }
+        if (name == "println") {
+            ctx.args.expression().forEach{print("" + visit(it) + " ")}
+            println()
+            return 0
         }
 
+        val argc = ctx.args.expression().size
+        val foundFunction = env.getFunction(name, argc)
         val args = foundFunction.first
         val argValues: List<Int> =
                 ctx.args.expression().map { visit(it) ?: throw EvaluationException() }
@@ -129,18 +124,16 @@ class ExpFunVisitor: ExpBaseVisitor<Int?>() {
         val result = visitBlock(foundFunction.second!!)
         env = env.parent!!
 
-        return result
+        return result ?: 0
     }
 
     override fun visitT_return(ctx: ExpParser.T_returnContext): Int? {
         val res = visit(ctx.value)
-        println("ret " + res)
-        env.result = res //visit(ctx.value)
+        env.result = res
         return null
     }
 
     override fun visitT_if(ctx: ExpParser.T_ifContext): Int? {
-        //env.printVariables()
         val cond = visit(ctx.condition)
         val block: ExpParser.BlockContext? =
                 if (cond != 0) ctx.block(0) else ctx.block(1)

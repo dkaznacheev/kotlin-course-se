@@ -15,12 +15,7 @@ fun getGreeting(): String {
 
 fun main(args: Array<String>) {
     val lexer = ExpLexer(CharStreams.fromString(
-            "fun fib(x) {" +
-                    "if (x == 0) {return 1}" +
-                    "if (x == 1) {return 1}" +
-                    "return fib(x - 1) + fib(x - 2)" +
-                    "}" +
-                    "print(fib(5))"
+            "fun fib(x) {println(x)} if (1) {fun fib(x) {println(x + 1, 0)}  fib(1)} println(fib(1))"
     ))
     val parser = ExpParser(BufferedTokenStream(lexer))
     val visitor = ExpFunVisitor()
