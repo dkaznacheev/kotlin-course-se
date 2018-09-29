@@ -22,6 +22,15 @@ class TestSource {
     }
 
     @Test
+    fun testParser() {
+        val lexer = ExpLexer(CharStreams.fromString(
+                "var x = 1\nprintln(x + 1)"
+        ))
+        val parser = ExpParser(BufferedTokenStream(lexer))
+        assertEquals(2, parser.file().body.children.size)
+    }
+
+    @Test
     fun testAssignment01() {
         assertEquals("1\n", testProgram(
                 "var x = 1\nprintln(x)"))
@@ -57,5 +66,22 @@ class TestSource {
                 "println(239 * (1 + 1 * (3 - 2) - 2 / 2))"))
     }
 
+    @Test
+    fun testFunctionCall() {
+        assertEquals("1\n", testProgram(
+                "fun f(x) {return x - 1} println(f(2))"))
+    }
+
+    @Test
+    fun testOuterReturn() {
+        assertEquals("1\n", testProgram(
+                "fun f(x) {if (1) {return x} else {return x}} println(f(1))"))
+    }
+
+    @Test
+    fun testWhile() {
+        assertEquals("3\n2\n1\n", testProgram(
+                "var i = 3 while (i > 0) {println(i) i = i - 1}"))
+    }
 
 }
