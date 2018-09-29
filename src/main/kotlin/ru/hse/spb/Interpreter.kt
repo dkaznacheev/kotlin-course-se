@@ -2,13 +2,17 @@ package ru.hse.spb
 
 import ru.hse.spb.parser.ExpBaseVisitor
 import ru.hse.spb.parser.ExpParser
+import java.io.OutputStream
+import java.io.PrintStream
 
 open class UnsupportedOperatorException:InterpreterException()
 open class EvaluationException:InterpreterException()
 open class NullDivisionException:InterpreterException()
+open class IncorrectArgsException:InterpreterException()
 
-class ExpFunVisitor: ExpBaseVisitor<Int?>() {
-    var env: Environment = Environment(null)
+class ExpFunVisitor(val outputStream: OutputStream): ExpBaseVisitor<Int?>() {
+    private var env: Environment = Environment(null)
+    private val printStream: PrintStream = PrintStream(outputStream)
 
     override fun visitFile(ctx: ExpParser.FileContext): Int? {
         env.addFunction("println", listOf(), null)
@@ -57,7 +61,7 @@ class ExpFunVisitor: ExpBaseVisitor<Int?>() {
 
     override fun visitExpression(ctx: ExpParser.ExpressionContext): Int? {
         if (ctx.children.first().text == "(")
-            return visit(ctx.children.get(1))
+            return visit(ctx.children[1])
 
         if (ctx.left != null && ctx.right != null && ctx.op != null) {
             val op = ctx.op.text
@@ -71,7 +75,7 @@ class ExpFunVisitor: ExpBaseVisitor<Int?>() {
 
             val right: Int = visit(ctx.right) ?: throw EvaluationException()
 
-            val result: Int = when(op) {
+            return when(op) {
                 "*" -> left * right
                 "/" -> if (right != 0) left / right else throw NullDivisionException()
                 "%" -> if (right != 0) left % right else throw NullDivisionException()
@@ -87,7 +91,6 @@ class ExpFunVisitor: ExpBaseVisitor<Int?>() {
                 "||" -> if (left != 0 || right != 0) 1 else 0
                 else -> throw UnsupportedOperatorException()
             }
-            return result
         }
         return visit(ctx.children.first())
     }
@@ -104,13 +107,20 @@ class ExpFunVisitor: ExpBaseVisitor<Int?>() {
         val name = ctx.name.text
 
         if (name == "println") {
-            ctx.args.expression().forEach{print("" + visit(it) + " ")}
-            println()
+            printStream.println(
+                    ctx.args.expression()
+                            .asSequence()
+                            .map { visit(it) }
+                            .joinToString(" ")
+            )
             return 0
         }
 
         val argc = ctx.args.expression().size
-        val foundFunction = env.getFunction(name, argc)
+        val foundFunction = env.getFunction(name)
+        if (argc != foundFunction.first.size)
+            throw IncorrectArgsException()
+
         val args = foundFunction.first
         val argValues: List<Int> =
                 ctx.args.expression().map { visit(it) ?: throw EvaluationException() }

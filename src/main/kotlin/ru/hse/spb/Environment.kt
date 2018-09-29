@@ -8,7 +8,7 @@ open class NoFunctionException: InterpreterException()
 class Environment(val parent: Environment?) {
     var result: Int? = null
     private val variables: MutableMap<String, Int?> = mutableMapOf()
-    private val functions: MutableMap<Pair<String, Int>, Pair<List<String>, ExpParser.BlockContext?>> =
+    private val functions: MutableMap<String, Pair<List<String>, ExpParser.BlockContext?>> =
             mutableMapOf()
 
     fun getVariable(name: String): Int? {
@@ -28,14 +28,14 @@ class Environment(val parent: Environment?) {
         variables[name] = null
     }
 
-    fun getFunction(name: String, argc: Int): Pair<List<String>, ExpParser.BlockContext?> {
-        return functions[Pair(name, argc)]
-                ?: parent?.getFunction(name, argc)
+    fun getFunction(name: String): Pair<List<String>, ExpParser.BlockContext?> {
+        return functions[name]
+                ?: parent?.getFunction(name)
                 ?: throw NoFunctionException()
     }
 
     fun addFunction(name: String, args: List<String>, body: ExpParser.BlockContext?) {
-        functions[Pair(name, args.size)] = Pair(args, body)
+        functions[name] = Pair(args, body)
     }
 
     fun printVariables() {
@@ -46,7 +46,10 @@ class Environment(val parent: Environment?) {
 
     fun printFunctions() {
         println("functions:")
-        functions.forEach{func, _ -> println(func.first + "(" + func.second + " args)")}
+        functions.forEach{func, body ->
+            println(func + "(" + body.first.joinToString(",") + ")")
+        }
+
         parent?.printFunctions()
     }
 }

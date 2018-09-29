@@ -18,6 +18,6 @@ fun main(args: Array<String>) {
             "fun fib(x) {println(x)} if (1) {fun fib(x) {println(x + 1, 0)}  fib(1)} println(fib(1))"
     ))
     val parser = ExpParser(BufferedTokenStream(lexer))
-    val visitor = ExpFunVisitor()
+    val visitor = ExpFunVisitor(System.out)
     visitor.visitFile(parser.file())
 }
