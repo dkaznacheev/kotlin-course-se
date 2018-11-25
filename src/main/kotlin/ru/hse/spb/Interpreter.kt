@@ -1,18 +1,17 @@
 package ru.hse.spb
 
-import ru.hse.spb.parser.ExpBaseVisitor
-import ru.hse.spb.parser.ExpParser
 import java.io.OutputStream
 import java.io.PrintStream
 
-open class UnsupportedOperatorException:InterpreterException()
-open class EvaluationException:InterpreterException()
-open class NullDivisionException:InterpreterException()
-open class IncorrectArgsException:InterpreterException()
+open class UnsupportedOperatorException : InterpreterException()
+open class EvaluationException : InterpreterException()
+open class NullDivisionException : InterpreterException()
+open class IncorrectArgsException : InterpreterException()
 
-class ExpFunVisitor(val outputStream: OutputStream): ExpBaseVisitor<Int?>() {
-    private var env: Environment = Environment(null)
-    private val printStream: PrintStream = PrintStream(outputStream)
+
+class ExpFunVisitor(outputStream: OutputStream) : ExpBaseVisitor<Int?>() {
+    private var env = Environment(null)
+    private val printStream = PrintStream(outputStream)
 
     override fun visitFile(ctx: ExpParser.FileContext): Int? {
         env.addFunction("println", listOf(), null)
@@ -29,7 +28,7 @@ class ExpFunVisitor(val outputStream: OutputStream): ExpBaseVisitor<Int?>() {
     }
 
     override fun visitStatement(ctx: ExpParser.StatementContext): Int? {
-        ctx.children.forEach {visit(it)}
+        ctx.children.forEach { visit(it) }
         return null
     }
 
@@ -48,7 +47,7 @@ class ExpFunVisitor(val outputStream: OutputStream): ExpBaseVisitor<Int?>() {
 
     override fun visitFunction(ctx: ExpParser.FunctionContext): Int? {
         val name = ctx.name.text
-        val params: List<String> = getParameterNames(ctx.params)
+        val params = getParameterNames(ctx.params)
         env.addFunction(name, params, ctx.block())
         return null
     }
@@ -59,13 +58,15 @@ class ExpFunVisitor(val outputStream: OutputStream): ExpBaseVisitor<Int?>() {
         return params.identifier().map { it.text }
     }
 
+    private fun Boolean.toInt() = if (this) 1 else 0
+    
     override fun visitExpression(ctx: ExpParser.ExpressionContext): Int? {
         if (ctx.children.first().text == "(")
             return visit(ctx.children[1])
 
         if (ctx.left != null && ctx.right != null && ctx.op != null) {
             val op = ctx.op.text
-            val left: Int = visit(ctx.left) ?: throw EvaluationException()
+            val left = visit(ctx.left) ?: throw EvaluationException()
 
             if (op == "&&" && left == 0)
                 return 0
@@ -73,7 +74,7 @@ class ExpFunVisitor(val outputStream: OutputStream): ExpBaseVisitor<Int?>() {
             if (op == "||" && left != 0)
                 return 1
 
-            val right: Int = visit(ctx.right) ?: throw EvaluationException()
+            val right = visit(ctx.right) ?: throw EvaluationException()
 
             return when(op) {
                 "*" -> left * right
@@ -81,14 +82,14 @@ class ExpFunVisitor(val outputStream: OutputStream): ExpBaseVisitor<Int?>() {
                 "%" -> if (right != 0) left % right else throw NullDivisionException()
                 "+" -> left + right
                 "-" -> left - right
-                "<=" -> if (left <= right) 1 else 0
-                "<" -> if (left < right) 1 else 0
-                ">=" -> if (left >= right) 1 else 0
-                ">" -> if (left > right) 1 else 0
-                "==" -> if (left == right) 1 else 0
-                "!=" -> if (left != right) 1 else 0
-                "&&" -> if (left != 0 && right != 0) 1 else 0
-                "||" -> if (left != 0 || right != 0) 1 else 0
+                "<=" -> (left <= right).toInt()
+                "<" -> (left < right).toInt()
+                ">=" -> (left >= right).toInt()
+                ">" -> (left > right).toInt()
+                "==" -> (left == right).toInt()
+                "!=" -> (left != right).toInt()
+                "&&" -> (left != 0 && right != 0).toInt()
+                "||" -> (left != 0 || right != 0).toInt()
                 else -> throw UnsupportedOperatorException()
             }
         }
@@ -109,7 +110,6 @@ class ExpFunVisitor(val outputStream: OutputStream): ExpBaseVisitor<Int?>() {
         if (name == "println") {
             printStream.println(
                     ctx.args.expression()
-                            .asSequence()
                             .map { visit(it) }
                             .joinToString(" ")
             )
@@ -122,8 +122,9 @@ class ExpFunVisitor(val outputStream: OutputStream): ExpBaseVisitor<Int?>() {
             throw IncorrectArgsException()
 
         val args = foundFunction.first
-        val argValues: List<Int> =
-                ctx.args.expression().map { visit(it) ?: throw EvaluationException() }
+        val argValues = ctx.args.expression().map {
+            visit(it) ?: throw EvaluationException()
+        }
 
         val innerEnv = Environment(env)
         for (i in 0 until argc) {
@@ -145,7 +146,7 @@ class ExpFunVisitor(val outputStream: OutputStream): ExpBaseVisitor<Int?>() {
 
     override fun visitT_if(ctx: ExpParser.T_ifContext): Int? {
         val cond = visit(ctx.condition)
-        val block: ExpParser.BlockContext? =
+        val block =
                 if (cond != 0) ctx.block(0) else ctx.block(1)
         if (block != null) {
             env = Environment(env)

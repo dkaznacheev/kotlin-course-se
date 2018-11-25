@@ -4,8 +4,6 @@ import org.antlr.v4.runtime.BufferedTokenStream
 import org.antlr.v4.runtime.CharStreams
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import ru.hse.spb.parser.ExpLexer
-import ru.hse.spb.parser.ExpParser
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 
